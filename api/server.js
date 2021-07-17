@@ -1,8 +1,9 @@
 const express = require('express');
+const morgan = require('morgan');
 
 const server = express();
-server.use(express.json());
-
+server.use(express.json()); //returns a middlware function - that function may or may not return a value
+server.use(morgan('dev'));
 // remember express by default cannot parse JSON in request bodies
 // global middlewares and the user's router need to be connected here
 

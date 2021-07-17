@@ -1,9 +1,13 @@
 const express = require('express');
+// const morgan = require('morgan');
+const server = require('../server');
 
 // You will need `users-model.js` and `posts-model.js` both
 // The middleware functions also need to be required
 
+// server.use(morgan('combined'));
 const router = express.Router();
+
 
 router.get('/', (req, res) => {
   // RETURN AN ARRAY WITH ALL THE USERS
