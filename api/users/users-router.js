@@ -9,42 +9,45 @@ const { logger,
 // The middleware functions also need to be required
 
 const router = express.Router();
-router.all('/', logger);
-router.all('/:id', [
-  validateUserId,
-  validateUser,
-  logger,
-]);
-router.all('/:id/*', [
-  logger,
-  validateUserId,
-  validateUser,
-  validatePost,
-]);
 
 router.route('/')
-  .get((req, res) => {
+  .get(logger, (req, res, next) => {
     // RETURN AN ARRAY WITH ALL THE USERS
+    User.get()
+      .then(
+        users => res.json(users)
+      )
+      .catch(next);
   })
-  .post((req, res) => {
+  .post([logger, validateUser], (req, res, next) => {
     // RETURN THE NEWLY CREATED USER OBJECT
     // this needs a middleware to check that the request body is valid
+    User.insert(req.body)
+      .then(newUser => res.status(201).json(newUser))
+      .catch(err => {
+        console.log(err);
+        next();
+      });
   });
 
 router.route('/:id')
-  .get((req, res) => {
+  .get([logger, validateUserId], (req, res) => {
     // RETURN THE USER OBJECT
     // this needs a middleware to verify user id
+    res.json(req.user);
     console.log(req.user);
   })
-  .put((req, res) => {
+  .put([logger, validateUserId, validateUser], (req, res) => {
     // RETURN THE FRESHLY UPDATED USER OBJECT
     // this needs a middleware to verify user id
     // and another middleware to check that the request body is valid
+    User.update()
+      .then(resp => res.status(201).json())
+      .catch(next)
     console.log(req.user);
 
   })
-  .delete((req, res) => {
+  .delete([logger, validateUserId], (req, res) => {
     // RETURN THE FRESHLY DELETED USER OBJECT
     // this needs a middleware to verify user id
     console.log(req.user);
@@ -58,7 +61,7 @@ router.get('/:id/posts', (req, res) => {
 
 });
 
-router.post('/:id/posts', (req, res) => {
+router.post('/:id/posts', validatePost, (req, res) => {
   // RETURN THE NEWLY CREATED USER POST
   // this needs a middleware to verify user id
   // and another middleware to check that the request body is valid
@@ -66,5 +69,13 @@ router.post('/:id/posts', (req, res) => {
 
 });
 
+router.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    customMessage: 'You are stanging in the cavern of the ice wizard. All around you are the carcasses of slain ice dwarfs.',
+    // error: err.message,
+    stack: err.stack,
+  });
+
+})
 // do not forget to export the router
 module.exports = router;
