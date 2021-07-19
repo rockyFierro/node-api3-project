@@ -1,17 +1,67 @@
+//putting models here to use... TODO: put models in server in case someone decides not to use this middleware.
+const User = require('../users/users-model');
+
 function logger(req, res, next) {
-  // DO YOUR MAGIC
+  const timestamp = new Date().toLocaleString();
+  const method = req.method;
+  const url = req.originalUrl;
+  console.log(`[${timestamp}] : ${method} <<  ${url}`);
+  next();
 }
 
-function validateUserId(req, res, next) {
-  // DO YOUR MAGIC
+async function validateUserId(req, res, next) {
+  try {
+    const user = await User.getById(req.params.id);
+    if (!user) {
+      res.status(404).json({ message: 'user not found' });
+    } else {
+      req.user = user;
+      console.log('validateUserId:', user);
+      next();
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: ' you have been frozen by the wizard Aghanam; His reign will last 5000 years. Better luck next time.',
+      error: error.message,
+      stack: error.stack,
+      time: new Date().toLocaleString,
+    })
+  }
+  next();
 }
 
 function validateUser(req, res, next) {
-  // DO YOUR MAGIC
+  const { name } = req.body;
+  if (!name || !name.trim()) {
+    res.status(400).json({
+      message: "missing required name field"
+    })
+  } else {
+    req.name = name.trim();
+    console.log('validateUser: ', name);
+    next();
+  }
 }
 
 function validatePost(req, res, next) {
-  // DO YOUR MAGIC
+  const { text, name } = req.body;
+  if (!text || !text.trim()) {
+    res.status(400).json({
+      message: "missing required text field"
+    })
+  } else {
+    req.text = text.trim();
+    req.name = name.trim();
+    console.log('validatePost: ', text);
+    next();
+  }
+  next();
 }
 
 // do not forget to expose these functions to other modules
+module.exports = {
+  logger,
+  validateUserId,
+  validateUser,
+  validatePost
+}
